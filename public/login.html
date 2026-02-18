@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Gradient background animation */
+    body {
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a1c4fd, #c2e9fb);
+      background-size: 300% 300%;
+      animation: gradientShift 10s infinite ease-in-out;
+      font-family: "Arial", sans-serif;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      animation: fadeIn 1.5s ease-out forwards;
+    }
+
+    @keyframes backgroundShift {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 50% 50%; }
+      50% { background-position: 100% 50%; }
+      75% { background-position: 50% 0%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* Login card with glowing border */
+    .card {
+      background: linear-gradient(135deg, rgba(255, 154, 158, 0.8), rgba(250, 208, 196, 0.8), rgba(251, 194, 235, 0.8));
+      background-size: 300% 300%;
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      border: 2px solid transparent;
+      animation: cardShift 10s infinite ease-in-out, glow 3s infinite;
+      padding: 2rem;
+    }
+
+    @keyframes cardShift {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 50% 50%; }
+      50% { background-position: 100% 50%; }
+      75% { background-position: 50% 0%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes glow {
+      0%, 100% { border-color: rgba(255, 255, 255, 0.1); }
+      50% { border-color: rgba(255, 255, 255, 0.6); }
+    }
+
+    /* Form field animations */
+    .form-control {
+      opacity: 0;
+      transform: translateX(-50px);
+      animation: slideIn 1s ease-out forwards;
+      animation-delay: 0.5s;
+    }
+    .form-control:nth-child(2) { animation-delay: 0.6s; }
+    .form-control:nth-child(3) { animation-delay: 0.7s; }
+
+    @keyframes slideIn {
+      0% { opacity: 0; transform: translateX(-50px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Button ripple effect */
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateZ(10px) scale(1.1);
+      box-shadow: 0 15px 25px rgba(118, 75, 162, 0.4);
+      z-index: 2;
+    }
+
+    .btn-primary:focus::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      animation: ripple 0.6s ease-out;
+      z-index: -1;
+    }
+
+    @keyframes ripple {
+      to { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+    }
+
+    /* Link hover animation */
+    a {
+      color: #007bff;
+      text-decoration: none;
+      position: relative;
+      display: inline-block;
+    }
+
+    a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -3px;
+      width: 0;
+      height: 2px;
+      background: #007bff;
+      transition: width 0.3s ease;
+    }
+
+    a:hover::after {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card">
+          <h2 class="text-center mb-4">Login</h2>
+          <form id="loginForm">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+            </div>
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary">Log In</button>
+            </div>
+          </form>
+          <p class="text-center mt-3">Don't have an account? <a href="signup.html">Sign up here</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault(); // Prevent default form submission
+  
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+  
+      try {
+        const response = await fetch("http://localhost:5501/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          // Store userId, name, and role in localStorage
+          localStorage.setItem("userId", data.userId);
+          localStorage.setItem("name", data.name);
+          localStorage.setItem("role", data.role); // Store role
+  
+          // Get the role from URL query parameter (if present)
+          const urlParams = new URLSearchParams(window.location.search);
+          const expectedRole = urlParams.get('role'); // Extract 'role' from URL
+  
+          // Check if the role from the backend matches the role in the URL
+          if (data.role === expectedRole) {
+            // Redirect to the appropriate dashboard based on the role
+            if (expectedRole === 'student') {
+              window.location.href = "studentpage.html"; // Redirect to student page
+            } else if (expectedRole === 'driver') {
+              window.location.href = "Driver.html"; // Redirect to driver page
+            }
+          } else {
+            alert("Role mismatch. Please ensure you're logging in as the correct user type.");
+          }
+        } else {
+          alert(data.message || "Login failed");
+        }
+      } catch (error) {
+        console.error("Error logging in:", error);
+        alert("An error occurred. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>

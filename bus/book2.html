@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        /* Background Animation */
+        @keyframes backgroundAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a1c4fd);
+            animation: backgroundAnimation 10s infinite ease-in-out;
+            background-size: 200% 200%;
+            overflow-x: hidden;
+        }
+        @keyframes slideDownWithBounce {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            60% {
+                transform: translateY(10px);
+                opacity: 1;
+            }
+            80% {
+                transform: translateY(-5px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            animation: slideDownWithBounce 1s ease-out forwards;
+            background: linear-gradient(to right, #b24592, #f15f79);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+
+        /* Sliding Card Animation */
+        @keyframes slideIn {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Card Container */
+        .container {
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            text-align: center;
+            animation: slideIn 1s ease-out forwards;
+        }
+
+        /* Buttons Pop-Up Animation */
+        @keyframes popUp {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: popUp 0.5s ease-out forwards;
+            animation-delay: 1s; /* Trigger after card animation */
+            opacity: 0; /* Initially hidden */
+        }
+
+        button:nth-child(2) {
+            animation-delay: 1.2s; /* Staggered delay for the second button */
+        }
+
+        button:hover {
+            background-color: #555;
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3), 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Notifications Drop-In Animation */
+        @keyframes dropIn {
+            0% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(-50px);
+            animation: dropIn 0.5s ease-out forwards;
+        }
+
+        li:nth-child(1) { animation-delay: 0.2s; }
+        li:nth-child(2) { animation-delay: 0.4s; }
+        li:nth-child(3) { animation-delay: 0.6s; }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .modal-content button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Notifications</h1>
+    </div>
+
+    <!-- Sliding Container -->
+    <div class="container">
+        <ul id="absenteeList"></ul>
+        <button onclick="openModal()">Clear Notifications</button>
+        <button onclick="window.location.href='driver.html'">Back to Dashboard</button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <h2>Confirm Clear Notifications</h2>
+            <p>Are you sure you want to clear all notifications?</p>
+            <button onclick="clearNotifications()">Yes</button>
+            <button onclick="closeModal()">No</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const list = document.getElementById("absenteeList");
+
+            fetch('http://localhost:5501/api/absentees')
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to fetch absentees.");
+                    return response.json();
+                })
+                .then(data => {
+                    const absentees = data || [];
+                    if (absentees.length > 0) {
+                        absentees.forEach(record => {
+                            const listItem = document.createElement("li");
+                            listItem.textContent = ${record.studentName} (on ${new Date(record.date).toLocaleDateString()});
+                            list.appendChild(listItem);
+                        });
+                    } else {
+                        list.innerHTML = "<li>No notifications available.</li>";
+                    }
+                })
+                .catch(error => console.error("Error fetching absentee data:", error));
+        });
+
+        const modal = document.getElementById("confirmationModal");
+
+        function openModal() {
+            modal.classList.add("active");
+        }
+
+        function closeModal() {
+            modal.classList.remove("active");
+        }
+
+        function clearNotifications() {
+            fetch('http://localhost:5501/api/absentees', { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to clear notifications.");
+                    document.getElementById("absenteeList").innerHTML = "<li>No notifications available.</li>";
+                    closeModal();
+                })
+                .catch(error => console.error("Error clearing notifications:", error));
+        }
+    </script>
+</body>
+</html>

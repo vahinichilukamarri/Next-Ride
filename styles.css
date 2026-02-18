@@ -1,0 +1,26 @@
+.bg-dark-opacity {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .card-hover:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+  }
+  
+  .card-body h5.card-title {
+    font-weight: 700;
+  }
+  
+  .btn-primary {
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  .carousel-inner img {
+      max-height: 400px; 
+      object-fit: cover; 
+      width: 100%; 
+  }

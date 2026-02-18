@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Routes</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #0056b3;
+        }
+
+        p {
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+
+        #map {
+            width: 90%;
+            height: 500px;
+            margin: 0 auto 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #0056b3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #003d80;
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        .leaflet-routing-container {
+            max-width: 300px !important;
+            font-size: 14px !important;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Keyframes for color-changing animation */
+        @keyframes colorChange {
+            0% { background-color: #ffeb3b; }
+            25% { background-color: #4caf50; }
+            50% { background-color: #2196f3; }
+            75% { background-color: #e91e63; }
+            100% { background-color: #ffeb3b; }
+        }
+
+        /* Apply color change animation to map markers */
+        .map-element {
+            animation: colorChange 4s infinite;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            transform: scale(1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .map-element:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>Bus Routes</h1>
+    <p>Select a route to display on the map:</p>
+    <div style="text-align: center;">
+        <button id="A1">Route A1</button>
+        <button id="A2">Route A2</button>
+        <button id="A3">Route A3</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Back to Dashboard Button -->
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="backToDashboard" onclick="redirectToDashboard()">Back to Dashboard</button>
+    </div>
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="rerouteA1">Reroute!</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([17.4253, 78.5390], 13);
+    
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    
+        var currentRoute = null; // Stores the current route being displayed
+        var activeRouteName = null; // Stores the active route name
+    
+        // Define routes
+        var routes = {
+            A1: [
+                [17.3973464062873, 78.4902343957105],
+                [17.4720, 78.5330],
+                [17.4500, 78.5400],
+                [17.4400, 78.5450],
+                [17.4300, 78.5420],
+                [17.4200, 78.5380],
+                [17.4100, 78.5320],
+                [17.4000, 78.5280],
+                [17.3973464062873, 78.4902343957105]
+            ],
+            A2: [
+                [17.3973464062873, 78.4902343957105],
+                [17.4021, 78.5520],
+                [17.4100, 78.5450],
+                [17.4150, 78.5400],
+                [17.4200, 78.5350],
+                [17.4250, 78.5300],
+                [17.4300, 78.5250],
+                [17.4350, 78.5200],
+                [17.3973464062873, 78.4902343957105]
+            ],
+            A3: [
+                [17.3973464062873, 78.4902343957105],
+                [17.3839, 78.4260],
+                [17.3900, 78.4500],
+                [17.3950, 78.4600],
+                [17.4000, 78.4700],
+                [17.4050, 78.4800],
+                [17.4100, 78.4900],
+                [17.4150, 78.5000],
+                [17.3973464062873, 78.4902343957105]
+            ]
+        };
+
+    
+        function showRoute(routeName) {
+            if (currentRoute) {
+                map.removeControl(currentRoute); // Remove the current route from the map
+            }
+    
+            activeRouteName = routeName; // Set the active route name
+            var selectedRoute = routes[routeName]; // Get the selected route's waypoints
+    
+            if (selectedRoute) {
+                currentRoute = L.Routing.control({
+                    waypoints: selectedRoute.map(function (latlng) {
+                        return L.latLng(latlng[0], latlng[1]);
+                    }),
+                    routeWhileDragging: false
+                }).addTo(map);
+    
+                // Add animated markers at bus stops (colored markers)
+                selectedRoute.forEach(function (latlng) {
+                    var marker = L.circleMarker(latlng, {
+                        radius: 10,
+                        color: 'transparent',
+                        fillColor: '#ffeb3b',
+                        fillOpacity: 1
+                    }).addTo(map);
+    
+                    // Add the animation class to the marker's DOM element
+                    marker._icon.classList.add('map-element');
+                });
+            }
+        }
+    
+        // Event listeners for route buttons
+        document.getElementById("A1").addEventListener("click", function () {
+            showRoute("A1");
+        });
+        document.getElementById("A2").addEventListener("click", function () {
+            showRoute("A2");
+        });
+        document.getElementById("A3").addEventListener("click", function () {
+            showRoute("A3");
+        });
+    
+        // Reroute functionality
+        document.getElementById("rerouteA1").addEventListener("click", function () {
+            if (activeRouteName && routes[activeRouteName].length > 2) {
+                // Remove one stop (second stop) from the active route
+                routes[activeRouteName].splice(1, 1);
+                // Re-render the route
+                showRoute(activeRouteName);
+            } else {
+                alert("No more stops to remove from " + activeRouteName);
+            }
+        });
+    
+        // Redirect to Dashboard
+        function redirectToDashboard() {
+            window.location.href = "Driver.html";
+        }
+    </script>
+</body>
+</html>

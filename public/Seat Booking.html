@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seat Booking</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Lobster&family=Raleway&family=Exo+2&family=Pacifico&family=Anton&family=Fredericka+the+Great&family=Cinzel&family=Zilla+Slab&family=Cherry+Cream+Soda&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: white;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: flex-start;
+        }
+
+        /* Navbar */
+        .navbar {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeInDown 1s ease-out forwards;
+        }
+
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #ff6ec7;
+        }
+
+        .navbar img {
+            height: 50px;
+            filter: drop-shadow(0 0 5px #ff6ec7);
+        }
+
+        /* Info Bar */
+        .info-bar {
+            width: 100%;
+            background-color: rgba(255, 110, 199, 0.7);
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            animation: slideIn 1s ease-out forwards;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ///Seat Layout/ */
+        .seat-container {
+            text-align: center;
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .seat-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .seat {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            text-align: center;
+            line-height: 60px;
+            cursor: pointer;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            color: white;
+            transition: all 0.4s ease, box-shadow 0.3s ease;
+        }
+
+        .seat.available:hover {
+            background: linear-gradient(135deg, #ff6ec7, #ffc600);
+            transform: scale(1.2);
+            box-shadow: 0 0 15px #ff6ec7, 0 0 20px #ffc600;
+        }
+
+        .booked {
+            background: linear-gradient(135deg, #6a0572, #a603a5);
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .selected {
+            background: linear-gradient(135deg, #00f260, #0575e6);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px #00f260, 0 0 30px #0575e6; }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px #00f260, 0 0 40px #0575e6; }
+        }
+        /* /Button/ */
+
+        #bookBtn {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #ff6ec7, #ffc600);
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #bookBtn:hover {
+            background: linear-gradient(135deg, #ffc600, #ff6ec7);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #ff6ec7, 0 0 20px #ffc600;
+        }
+
+        #bookBtn:active {
+            transform: scale(0.95); /* Slightly shrink when clicked */
+        }
+
+        .passenger-controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .passenger-controls button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 16px;
+        }
+
+        .passenger-controls input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            margin: 0 5px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .date-location-controls {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+        }
+
+        .date-location-controls input,
+        .date-location-controls select {
+            margin: 0 10px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 40px;
+            font-size: 14px;
+            color: #ffc600;
+            text-shadow: 0 0 5px #ff6ec7, 0 0 10px #ffc600;
+            animation: fadeIn 3s infinite alternate;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0.6; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Seat Booking System</a>
+        <img src="imgs/seats.jpg" alt="Logo">
+        <a href="studentpage.html" class="btn btn-info">Back to Dashboard</a>
+    </nav>
+
+    <div class="info-bar">
+        <div class="date-location-controls">
+            <input type="date" id="travel-date">
+            <select id="start-location">
+                <option value="" disabled selected hidden>Choose location</option>
+                <option value="Secunderabad">Secunderabad</option>
+                <option value="Abids">Abids</option>
+                <option value="Himayathnagar">Himayathnagar</option>
+            </select>
+            <select id="bus-number">
+                <option value="" disabled selected hidden>Select Bus Number</option>
+                <option value="Bus 101">Bus 101</option>
+                <option value="Bus 102">Bus 102</option>
+                <option value="Bus 103">Bus 103</option>
+            </select>
+        </div>
+
+        <div class="passenger-controls">
+            <button id="decrease-passengers">-</button>
+            <input type="number" id="passenger-count" value="1" readonly>
+            <button id="increase-passengers">+</button>
+        </div>
+    </div>
+
+    <div class="seat-container">
+        <!-- A-series seats -->
+        <div class="seat-row">
+            <div class="seat available" data-seat="A1">A1</div>
+            <div class="seat available" data-seat="A2">A2</div>
+            <div class="seat available" data-seat="A3">A3</div>
+            <div class="seat available" data-seat="A4">A4</div>
+            <div class="seat available" data-seat="A5">A5</div>
+            <div class="seat available" data-seat="A6">A6</div>
+            <div class="seat available" data-seat="A7">A7</div>
+            <div class="seat available" data-seat="A8">A8</div>
+            <div class="seat available" data-seat="A9">A9</div>
+            <div class="seat available" data-seat="A10">A10</div>
+        </div>
+
+        <!-- B-series seats -->
+        <div class="seat-row">
+            <div class="seat available" data-seat="B1">B1</div>
+            <div class="seat available" data-seat="B2">B2</div>
+            <div class="seat available" data-seat="B3">B3</div>
+            <div class="seat available" data-seat="B4">B4</div>
+            <div class="seat available" data-seat="B5">B5</div>
+            <div class="seat available" data-seat="B6">B6</div>
+            <div class="seat available" data-seat="B7">B7</div>
+            <div class="seat available" data-seat="B8">B8</div>
+            <div class="seat available" data-seat="B9">B9</div>
+            <div class="seat available" data-seat="B10">B10</div>
+        </div>
+
+        <!-- C-series seats -->
+        <div class="seat-row">
+            <div class="seat available" data-seat="C1">C1</div>
+            <div class="seat available" data-seat="C2">C2</div>
+            <div class="seat available" data-seat="C3">C3</div>
+            <div class="seat available" data-seat="C4">C4</div>
+            <div class="seat available" data-seat="C5">C5</div>
+            <div class="seat available" data-seat="C6">C6</div>
+            <div class="seat available" data-seat="C7">C7</div>
+            <div class="seat available" data-seat="C8">C8</div>
+            <div class="seat available" data-seat="C9">C9</div>
+            <div class="seat available" data-seat="C10">C10</div>
+        </div>
+    </div>
+
+    <button id="bookBtn" class="bookBtn">Book Selected Seats</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // List to hold dynamically booked seats
+        let bookedSeats = ['A1', 'B3', 'C2']; // Initially booked seats (these can come from a database or API)
+
+        $(document).ready(function() {
+            // Display initial booked seats
+            bookedSeats.forEach(function(seat) {
+                $(`[data-seat='${seat}']`).addClass('booked');
+            });
+
+            // When a seat is clicked
+            $('.seat.available').on('click', function() {
+                let seat = $(this).data('seat');
+                if (bookedSeats.includes(seat)) {
+                    alert('This seat is already booked.');
+                } else {
+                    $(this).toggleClass('selected');
+                }
+            });
+
+            // Book the selected seats
+            $('#bookBtn').on('click', function() {
+                let selectedSeats = [];
+                $('.seat.selected').each(function() {
+                    selectedSeats.push($(this).data('seat'));
+                    $(this).removeClass('selected').addClass('booked');
+                });
+                if (selectedSeats.length > 0) {
+                    bookedSeats = bookedSeats.concat(selectedSeats); // Add selected seats to the bookedSeats list
+                    alert('Seats booked: ' + selectedSeats.join(', '));
+                } else {
+                    alert('No seats selected.');
+                }
+            });
+
+            // Adjust the number of passengers
+            let passengerCount = 1;
+            $('#increase-passengers').on('click', function() {
+                passengerCount++;
+                $('#passenger-count').val(passengerCount);
+            });
+
+            $('#decrease-passengers').on('click', function() {
+                if (passengerCount > 1) {
+                    passengerCount--;
+                    $('#passenger-count').val(passengerCount);
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

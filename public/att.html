@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Attendance Scanner</title>
+
+    <style>
+
+        body {
+
+            font-family: 'Arial', sans-serif;
+
+            margin: 0;
+
+            padding: 0;
+
+            background-color: #f7faff;
+
+            color: #333;
+
+        }
+
+
+
+        /* Header Section */
+
+        .header {
+
+            background-color: #0078d4;
+
+            color: white;
+
+            padding: 15px 20px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+
+
+        .header h1 {
+
+            font-size: 1.8rem;
+
+        }
+
+
+
+        .header button {
+
+            background-color: white;
+
+            color: #0078d4;
+
+            padding: 10px 15px;
+
+            border: none;
+
+            border-radius: 20px;
+
+            cursor: pointer;
+
+            transition: 0.3s ease;
+
+        }
+
+
+
+        .header button:hover {
+
+            background-color: #0056a3;
+
+            color: white;
+
+        }
+
+
+
+        /* Main Container */
+
+        .container {
+
+            max-width: 800px;
+
+            margin: 20px auto;
+
+            padding: 20px;
+
+            text-align: center;
+
+        }
+
+
+
+        h2 {
+
+            color: #0078d4;
+
+        }
+
+
+
+        /* Camera Section */
+
+        .scanner {
+
+            margin: 20px 0;
+
+        }
+
+
+
+        video {
+
+            width: 100%;
+
+            max-width: 600px;
+
+            border: 2px solid #0078d4;
+
+            border-radius: 10px;
+
+            margin: 10px 0;
+
+        }
+
+
+
+        .notifications {
+
+            margin: 20px 0;
+
+        }
+
+
+
+        .notification {
+
+            background-color: #ffedcc;
+
+            padding: 15px;
+
+            margin-bottom: 10px;
+
+            border-radius: 8px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+        }
+
+
+
+        .notification i {
+
+            font-size: 1.5rem;
+
+            color: #ffa500;
+
+        }
+
+
+
+        /* GPS Button */
+
+        .gps-button {
+
+            display: block;
+
+            margin: 30px auto;
+
+            text-align: center;
+
+            padding: 15px;
+
+            background-color: #28a745;
+
+            color: white;
+
+            font-size: 1.2rem;
+
+            border: none;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            transition: 0.3s ease;
+
+        }
+
+
+
+        .gps-button:hover {
+
+            background-color: #1d7a33;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <h1>Attendance Scanner</h1>
+
+        <button onclick="window.location.href='login.html'">Logout</button>
+
+    </div>
+
+
+
+    <!-- Main Container -->
+
+    <div class="container">
+
+        <h2>Scan Your ID to Mark Attendance</h2>
+
+
+
+        <!-- Camera Scanner -->
+
+        <div class="scanner">
+
+            <video id="video" autoplay></video>
+
+        </div>
+
+
+
+        <!-- Notifications -->
+
+        <div class="notifications" id="notifications">
+
+            <!-- Notifications will appear here -->
+
+        </div>
+
+
+
+        <!-- GPS Redirect Button -->
+
+        <button class="gps-button" onclick="redirectToGPS()">Redirect to GPS</button>
+
+    </div>
+
+
+
+    <!-- Include jsQR Library -->
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+    <script>
+        const video = document.getElementById("video");
+        const notifications = document.getElementById("notifications");
+    
+        // Access Camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Camera access denied:", err);
+                alert("Unable to access the camera. Please allow camera permissions.");
+            });
+    
+        // QR Code Scanner Logic
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+    
+        function scanQRCode() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+    
+            if (code) {
+                markAttendance(code.data);
+            }
+        }
+    
+        // Mark Attendance Function
+        function markAttendance(studentID) {
+            // Create a new notification
+            const notification = document.createElement("div");
+            notification.className = "notification";
+            notification.innerHTML = `
+                <i>✔</i>
+                <span>Attendance marked for Student ID: <strong>${studentID}</strong>.</span>
+                <span class="message"></span>
+            `;
+            notifications.appendChild(notification);
+    
+            const messageSpan = notification.querySelector('.message');
+    
+            // Send the scanned QR code to the backend
+            fetch('http://localhost:5501/api/scan-qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    scannedQRCode: studentID  // Send the scanned student ID (QR code)
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        messageSpan.textContent = ` ${data.message}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    //messageSpan.textContent = ' Error marking attendance.';
+                });
+        }
+    
+        // Redirect to GPS
+        function redirectToGPS() {
+            window.location.href = "geo2.html"; // Replace with your GPS page URL
+        }
+    
+        // Continuous Scanning
+        setInterval(scanQRCode, 5000);  // Scan every 5 seconds
+    </script>
+</body>
+
+</html>

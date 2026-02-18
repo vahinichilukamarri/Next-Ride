@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Page</title>
+  <style>
+    /* General body and layout styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #ff99cc, #66ccff);
+      color: #333;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 30px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    /* Profile info */
+    .profile-info {
+      font-size: 1.1em;
+      margin-bottom: 20px;
+    }
+
+    .profile-info b {
+      color: #007bff;
+    }
+
+    /* Form styling */
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1em;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    /* Message styles for success/error */
+    .message {
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .error {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+
+      button {
+        font-size: 1em;
+      }
+
+      h2 {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Profile</h2>
+    <div class="profile-info">
+      <p><b>Name:</b> <span id="userName">Loading...</span></p>
+      <p><b>Email:</b> <span id="email">Loading...</span></p>
+    </div>
+    <label for="phone">Phone:</label>
+    <input type="text" id="phone" placeholder="Enter your phone number" />
+    
+    <label for="address">Address:</label>
+    <input type="text" id="address" placeholder="Enter your address" />
+    
+    <button onclick="updateContactInfo()">Update Profile</button>
+    
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    const userId = localStorage.getItem("userId");
+    console.log(userId);
+    if (!userId) {
+      console.error("User ID not found in localStorage.");
+    }
+
+    // Fetch user details and populate the profile
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`http://localhost:5501/api/contact-info/${userId}`);
+        if (!response.ok) throw new Error("Failed to fetch profile data");
+        const data = await response.json();
+
+        document.getElementById('userName').textContent = data.name || "N/A";
+        document.getElementById('email').textContent = data.email || "N/A";
+        document.getElementById('phone').value = data.phone || "";
+        document.getElementById('address').value = data.address || "";
+        
+        // Store role for redirection logic (assuming the API provides this)
+        localStorage.setItem("userRole", data.role || "driver");
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        showMessage("Error fetching profile. Please try again.", "error");
+      }
+    };
+
+    // Update contact information
+    const updateContactInfo = async () => {
+      const phone = document.getElementById('phone').value;
+      const address = document.getElementById('address').value;
+
+      try {
+        const response = await fetch(`http://localhost:5501/api/contact-info/${userId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, address }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          showMessage(result.message, "success");
+          redirectToAppropriatePage();
+        } else {
+          throw new Error(result.message || "Failed to update profile");
+        }
+      } catch (error) {
+        console.error("Error updating contact info:", error);
+        showMessage("Error updating profile. Please try again.", "error");
+      }
+    };
+
+    // Show a success or error message
+    const showMessage = (message, type) => {
+      const messageDiv = document.getElementById('message');
+      messageDiv.className = type;
+      messageDiv.textContent = message;
+    };
+
+    // Redirect based on user role
+    const redirectToAppropriatePage = () => {
+    window.location.href = "Driver.html";
+    };
+
+    // Load the profile on page load
+    window.onload = fetchProfile;
+  </script>
+</body>
+</html>

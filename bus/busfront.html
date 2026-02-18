@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet with MongoDB and Routes</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <style>
+    #map {
+      height: 500px;
+    }
+
+    .leaflet-routing-container {
+      font-size: 12px !important;
+      width: 200px !important;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Leaflet Map with MongoDB Data and Routes</h1>
+
+  <div id="map"></div>
+
+  <script>
+    // WebSocket connection to listen for notifications
+    const socket = new WebSocket('ws://localhost:5501');
+    
+    // Initialize the map
+    const map = L.map("map").setView([17.3850, 78.4867], 12); // Hyderabad coordinates
+
+    // Add tile layer
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Create a routing control instance
+    const routingControl = L.Routing.control({
+      waypoints: [],
+      createMarker: () => null, // Don't show extra markers for the route
+      routeWhileDragging: true,
+    }).addTo(map);
+
+    let waypoints = []; // Store waypoints
+    let studentLocation = null; // Store the location of the logged-in student
+
+    // Fetch data from the backend and set waypoints
+    fetch("http://localhost:5501/locations")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Fetched data from backend:", data); // Debug log
+
+        data.forEach((location) => {
+          const [lng, lat] = location.loc.coordinates;
+
+          // Add marker to the map
+          L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(`Roll: ${location.rollNumber}<br>Name: ${location.name}`);
+
+          // Add this location as a waypoint for the route
+          waypoints.push(L.latLng(lat, lng));
+        });
+
+        // Set the waypoints for the routing control
+        routingControl.setWaypoints(waypoints);
+      })
+      .catch((err) => console.error("Error fetching data:", err));
+
+    // Listen for WebSocket messages to skip stops
+    socket.onopen = () => console.log("WebSocket connection established.");
+    socket.onerror = (err) => console.error("WebSocket error:", err);
+    socket.onmessage = (message) => {
+      const data = JSON.parse(message.data);
+      if (data.action === "skipStop") {
+        const rollNumber = data.rollNumber;
+
+        // Find and skip the student's stop
+        skipStudentStop(rollNumber);
+      }
+    };
+
+    // Function to skip a specific student's stop
+    function skipStudentStop(rollNumber) {
+      fetch(`http://localhost:5501/locations?rollNumber=${rollNumber}`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (data.length === 0) {
+            console.warn("Student not found for roll number:", rollNumber);
+            return;
+          }
+
+          const studentLatLng = L.latLng(data[0].loc.coordinates[1], data[0].loc.coordinates[0]);
+          waypoints = waypoints.filter((wp) => !wp.equals(studentLatLng)); // Filter out the student's stop
+          routingControl.setWaypoints(waypoints); // Update the route
+          console.log("Skipped student's stop and updated route.");
+        })
+        .catch((err) => console.error("Error skipping student stop:", err));
+    }
+
+    // Reset the route back to original after 24 hours
+    setTimeout(() => {
+      fetch("http://localhost:5501/locations")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          waypoints = []; // Reset waypoints
+          data.forEach((location) => {
+            const [lng, lat] = location.loc.coordinates;
+            waypoints.push(L.latLng(lat, lng));
+          });
+          routingControl.setWaypoints(waypoints); // Update the route with all original stops
+          console.log("Route reset to original stops.");
+        })
+        .catch((err) => console.error("Error resetting route:", err));
+    }, 86400000); // Reset after 24 hours (86400000 ms)
+  </script>
+</body>
+</html>

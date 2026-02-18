@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semi-Circle Attendance Tracker</title>
+  <style>
+    /* General body styling */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    .attendance-tracker {
+      text-align: center;
+    }
+
+    /* Outer semi-circle */
+    .semi-circle {
+      width: 200px;
+      height: 100px;
+      background: green; /* Default background is green */
+      border-top-left-radius: 100px;
+      border-top-right-radius: 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Filling part of the semi-circle */
+    .fill {
+      width: 200px;
+      height: 200px; /* Full circle for clipping */
+      background: transparent; /* Color changes dynamically */
+      border-radius: 50%; /* Makes it circular */
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      transform-origin: center bottom;
+      transform: rotate(0deg); /* No fill initially */
+      transition: transform 0.5s ease-in-out, background 0.5s ease-in-out; /* Smooth animation */
+    }
+
+    /* Text below the semi-circle */
+    .status {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="attendance-tracker">
+    <div class="semi-circle">
+      <div class="fill"></div>
+    </div>
+    <div class="status">Status</div>
+  </div>
+
+  <script>
+    /**
+     * Updates the attendance tracker.
+     * @param {number} presentDays - Number of days the student was present.
+     * @param {number} totalDays - Total number of days.
+     */
+    function updateAttendance(presentDays, totalDays) {
+      // Calculate percentage of attendance
+      const percentage = (presentDays / totalDays) * 100;
+      const degrees = (percentage / 100) * 180; // Map percentage to semi-circle degrees
+      const fillElement = document.querySelector('.fill');
+      const statusElement = document.querySelector('.status');
+
+      // Set rotation for the semi-circle fill
+      fillElement.style.transform = `rotate(${degrees}deg)`;
+
+      // Update the color of the fill based on thresholds
+      if (percentage <= 65) {
+        fillElement.style.background = 'red';
+        statusElement.textContent = `${Math.round(percentage)}% - Low Attendance`;
+        statusElement.style.color = 'red';
+      } else if (percentage > 65 && percentage <= 75) {
+        fillElement.style.background = 'white'; /* Warning zone is now white */
+        statusElement.textContent = `${Math.round(percentage)}% - Warning Attendance`;
+        statusElement.style.color = 'orange';
+      } else {
+        fillElement.style.background = 'green'; /* Good attendance is green */
+        statusElement.textContent = `${Math.round(percentage)}% - Good Attendance`;
+        statusElement.style.color = 'green';
+      }
+    }
+
+    // Example Usage
+    updateAttendance(7, 10); // 7 out of 10 days present
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Tracking</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .attendance-container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            padding: 30px;
+            text-align: center;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+        .student-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .detail-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        .detail-value {
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+
+        .attendance-gauge {
+            position: relative;
+            width: 300px;
+            height: 150px;
+            margin: 0 auto 20px;
+            background-color: #ecf0f1;
+            border-radius: 150px 150px 0 0;
+            overflow: hidden;
+        }
+
+        .attendance-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%; /* Start with 0% width */
+            height: 100%;
+            background-color: #2ecc71;
+            transition: width 0.5s ease, background-color 0.5s ease;
+        }
+
+        .attendance-percentage {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="attendance-container">
+        <div class="navigation">
+            <a href="#dashboard" class="nav-link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="studentpage.html" class="nav-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+        <div class="student-details-grid">
+            <div class="detail-item">
+                <div class="detail-label">Name</div>
+                <div id="studentName" class="detail-value">CH VENKATA VAHINI</div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-label">Class</div>
+                <div id="studentClass" class="detail-value">2nd</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Section</div>
+                <div id="studentSection" class="detail-value">A</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Roll No</div>
+                <div id="studentRollNo" class="detail-value">23BD1A051D</div>
+            </div>
+        </div>
+
+        <div class="attendance-gauge">
+            <div id="attendanceFill" class="attendance-fill"></div>
+        </div>
+
+        <div id="attendancePercentage" class="attendance-percentage">
+            Attendance: <span id="currentAttendance">75%</span>
+        </div>
+    </div>
+
+    <script>
+        // Initial attendance data
+        let attendanceData = {
+            totalTrips: 10,
+            attendedTrips: 8,
+            attendancePercentage: 75
+        };
+
+        function updateAttendanceDisplay() {
+            const fill = document.getElementById('attendanceFill');
+            const currentAttendance = document.getElementById('currentAttendance');
+
+            // Update attendance percentage display
+            attendanceData.attendancePercentage =
+                (attendanceData.attendedTrips / attendanceData.totalTrips) * 100;
+            currentAttendance.textContent = `${attendanceData.attendancePercentage.toFixed(1)}%`;
+
+            // Update width of the fill based on attendance percentage
+            fill.style.width = `${attendanceData.attendancePercentage}%`;
+
+            // Update fill color based on percentage
+            if (attendanceData.attendancePercentage <= 65) {
+                fill.style.backgroundColor = '#e74c3c'; // Red
+            } else if (attendanceData.attendancePercentage <= 75) {
+                fill.style.backgroundColor = '#f39c12'; // Orange
+            } else {
+                fill.style.backgroundColor = '#2ecc71'; // Green
+            }
+        }
+
+        // Initialize the attendance display on page load
+        document.addEventListener('DOMContentLoaded', updateAttendanceDisplay);
+    </script>
+</body>
+</html>

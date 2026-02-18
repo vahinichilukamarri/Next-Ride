@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Background and Card Synchronization */
+    body {
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a1c4fd, #c2e9fb);
+      background-size: 300% 300%;
+      animation: colorShift 10s infinite ease-in-out;
+      font-family: "Arial", sans-serif;
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    @keyframes colorShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Card Styling */
+    .card {
+      background: inherit;
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      padding: 2rem;
+      backdrop-filter: blur(15px);
+      animation: cardShift 10s infinite ease-in-out;
+    }
+
+    @keyframes cardShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Neon Glow for Form Fields */
+    .form-control {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      transition: box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 30px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Button Styling */
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 20px rgba(118, 75, 162, 0.5);
+    }
+
+    /* Link Styling */
+    a {
+      color: #03356b;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    a:hover {
+      color: #c39303;
+    }
+  </style>
+<body>
+  <section class="form-section d-flex align-items-center justify-content-center">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-80">
+          <div class="card shadow" style="max-width: 900px; margin: auto;">
+            <div class="card-body p-5">
+              <h2 class="card-title text-center mb-4">Sign Up</h2>
+              <form id="signupForm">
+                <div class="mb-3">
+                  <label for="name" class="form-label">Full Name</label>
+                  <input type="text" class="form-control" id="name" placeholder="Enter your full name" required>
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password</label>
+                  <input type="password" class="form-control" id="password" placeholder="Create a password" required>
+                </div>
+                <div class="mb-3">
+                  <label for="confirm-password" class="form-label">Confirm Password</label>
+                  <input type="password" class="form-control" id="confirm-password" placeholder="Confirm your password" required>
+                </div>
+                <!-- Hidden field to store role -->
+                <input type="hidden" id="role" name="role">
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-primary">Sign Up</button>
+                </div>
+              </form>
+              <p class="text-center mt-3">Already have an account? <a href="login.html">Log in here</a>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <script>
+    // Extract 'role' from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const role = urlParams.get('role');
+    console.log("Role from URL:", role);
+
+    // Set the role value in the hidden input field
+    if (role) {
+      document.getElementById('role').value = role;
+    } else {
+      alert("Role not specified. Please select a role from the homepage.");
+    }
+
+    // Handle form submission
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+      const role = document.getElementById("role").value;
+
+      // Validate password and confirm password
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5501/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name, email, password, role }),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert(result.message); // Success message
+          setTimeout(() => {
+            window.location.href = "homepage.html"; // Redirect to login page after delay
+          }, 1000);
+        } else {
+          alert(result.message); // Show error message from the server
+        }
+      } catch (error) {
+        console.error("Error during signup:", error);
+        alert("An error occurred. Please try again.");
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+</body>
+</html>

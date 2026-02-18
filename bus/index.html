@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Routes</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bus Round Trip</h1>
+    <p>The bus route will be displayed on the map, covering all student stops.</p>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <script>
+        var map = L.map('map').setView([17.4253, 78.5390], 13); // Centered at Narayanguda
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var currentRoute = null;
+
+        // Function to fetch student data and show route
+        async function showRoute() {
+            if (currentRoute) map.removeControl(currentRoute); // Clear existing route
+
+            try {
+                // Fetch student data
+                const response = await fetch('/api/students/getStudents');
+                const students = await response.json();
+                console.log("Fetched Students:", students);
+
+                if (!students || students.length === 0) {
+                    alert("No student data available.");
+                    return;
+                }
+
+                // Geocode each student's address
+                const studentCoordinates = [];
+                for (const student of students) {
+                    const coords = await getCoordinates(student.address);
+                    if (coords) {
+                        studentCoordinates.push([coords.lat, coords.lon]);
+                        console.log(`Coordinates for ${student.name}:`, coords);
+
+                        // Add a marker for each student
+                        L.marker([coords.lat, coords.lon])
+                            .addTo(map)
+                            .bindPopup(`${student.name} (${student.address})`);
+                    } else {
+                        console.log(`Could not resolve coordinates for ${student.name}`);
+                    }
+                }
+
+                // Ensure we have valid coordinates
+                if (studentCoordinates.length === 0) {
+                    alert("No valid coordinates could be resolved for the addresses.");
+                    return;
+                }
+
+                // Add starting and ending points (Narayanguda)
+                studentCoordinates.unshift([17.4253, 78.5390]);
+                studentCoordinates.push([17.4253, 78.5390]);
+
+                console.log("Final Route Coordinates:", studentCoordinates);
+
+                // Plot the route on the map
+                currentRoute = L.Routing.control({
+                    waypoints: studentCoordinates.map(coord => L.latLng(coord[0], coord[1])),
+                    routeWhileDragging: false
+                }).addTo(map);
+
+            } catch (error) {
+                console.error("Error fetching or processing data:", error);
+            }
+        }
+
+        // Function to geocode addresses
+        async function getCoordinates(address) {
+            const encodedAddress = encodeURIComponent(address);
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log(`Geocoded Data for ${address}:`, data);
+
+                if (data.length > 0) {
+                    return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+                }
+                return null;
+            } catch (error) {
+                console.error("Error fetching geocoding data:", error);
+                return null;
+            }
+        }
+
+        // Call the function to display the route
+        showRoute();
+    </script>
+</body>
+</html>
